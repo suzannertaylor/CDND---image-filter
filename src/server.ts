@@ -41,7 +41,7 @@ import { runInNewContext } from 'vm';
 
   app.get("/filteredimage", async ( req, res, next ) => {
     let { image_url } = req.query;
-    console.log(image_url);
+    
     if (!image_url) {
       return res.status(400).send({ message: 'Image url is required or malformed' });
     }
