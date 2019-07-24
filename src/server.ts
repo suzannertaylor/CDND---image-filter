@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import { runInNewContext } from 'vm';
 
 (async () => {
 
@@ -34,11 +35,28 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   // Root Endpoint
   // Displays a simple message to the user
   app.get( "/", async ( req, res ) => {
-    let { image_url } = req.query;
     
     res.send("try GET /filteredimage?image_url={{}}")
+  });
+
+  app.get("/filteredimage", async ( req, res, next ) => {
+    let { image_url } = req.query;
+    
+    if (!image_url) {
+      return res.status(400).send({ message: 'Image url is required or malformed' });
+    }
+
+    const filtered_image = await filterImageFromURL(image_url);
+
+    res.status(201).sendFile(filtered_image, function (err) {
+      if (err) {
+        next(err)
+      } else {
+        console.log('Sent: ', filtered_image);
+        deleteLocalFiles([filtered_image]);
+      }
+    });
   } );
-  
 
   // Start the Server
   app.listen( port, () => {
